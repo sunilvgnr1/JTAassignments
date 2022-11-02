@@ -1,0 +1,51 @@
+<template>
+        <template if:true={showWorkingByDays}>
+                <div class="slds-scrollable_y" style="height:20rem;">
+                        <lightning-datatable key-field="day" 
+                        data={workingPatternByDays} 
+                        columns={columns} 
+                        hide-checkbox-column> 
+                        </lightning-datatable>
+                </div>
+        </template>
+
+        <template if:true={showWorkingByShifts}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered"
+                        aria-label="Table to show the shift vs every day timings">
+                        <thead>
+                                <tr class="slds-line-height_reset">
+                                        <template for:each={columnsOfShiftGrid} for:item="column">
+                                                <th class="" scope="col" key={column}>
+                                                        <div class="slds-truncate" title={column}>{column}</div>
+                                                </th>
+                                        </template>
+                                </tr>
+                        </thead>
+                        <tbody>
+                                <template for:each={WorkingPatternByShifts} for:item="shift">
+                                        <tr class="slds-hint-parent" key={shift.key}>
+                                                <th data-label="Shift Name" scope="row">
+                                                        <div class="slds-truncate">
+                                                                {shift.key}
+                                                        </div>
+                                                </th>
+                                                <template for:each={shift.value} for:item="eachDayTime">
+                                                        <td data-label={eachDayTime.day} key={eachDayTime.day}>
+                                                                <div class="slds-truncate">
+                                                                        <lightning-formatted-date-time
+                                                                                value={eachDayTime.startTime} hour="2-digit"
+                                                                                minute="2-digit" time-zone="UTC">
+                                                                        </lightning-formatted-date-time> -
+                                                                        <lightning-formatted-date-time
+                                                                                value={eachDayTime.endTime} hour="2-digit"
+                                                                                minute="2-digit" time-zone="UTC">
+                                                                        </lightning-formatted-date-time>
+                                                                </div>
+                                                        </td>
+                                                </template>
+                                        </tr>
+                                </template>
+                        </tbody>
+                </table>
+        </template>
+</template>
