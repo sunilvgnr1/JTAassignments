@@ -6,7 +6,9 @@ public with sharing class workingPatternController {
     public static final String OrgPartitionName='local.WorkingPatternMasterData';
 
     /**
-     * @description this method will be called from lwc component to return
+     * @description this method will be called from lwc component to return masterdata wrapper 
+     * class instance from cache if its available else getWorkingPatternOfContract method will be called to form 
+     * masterData class and put it in the cache.
      * @param  contractRecordId  
      * @return return masterData wrapper class instance 
      */ 
@@ -133,13 +135,13 @@ public with sharing class workingPatternController {
         @AuraEnabled public String shift;
         @AuraEnabled public Time startTime;
         @AuraEnabled public Time endTime;
-        dayAndTime(String day,String shift,Time startTime,Time endTime){
+        dayAndTime(String day,String shift,Time startTime,Time endTime){ // Will be used for data table with Day, Shift, Start and End time columns
             this.day=day;
             this.shift=shift;
             this.startTime=startTime;
             this.endTime=endTime;
         }
-        dayAndTime(String day,Time startTime,Time endTime){
+        dayAndTime(String day,Time startTime,Time endTime){ // Will be used for data table with Monday to Sunday columns
             this.day=day;
             this.startTime=startTime;
             this.endTime=endTime;
