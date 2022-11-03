@@ -5,12 +5,31 @@ public with sharing class workingPatternController {
     public static final String EndTimeAPI ='_End_Time__c';
     public static final String OrgPartitionName='local.WorkingPatternMasterData';
 
+    /**
+     * @description this method will be called from lwc component to return
+     * @param  contractRecordId  
+     * @return return masterData wrapper class instance 
+     */ 
     @AuraEnabled
     public static masterData getWorkingPatternMasterDataOfContract(String contractRecordId){
         Contract contractDetails = getContractDetails(contractRecordId);
         return getWorkingPatternMasterDataFromCache(OrgPartitionName,contractDetails);
     }
 
+    /**
+     * @description 
+     * step 1:Query shifts associated to working pattern of the contract record
+     * Step 2:Loop through the shift records 
+     * Step 3.Using Sobject.getPopulatedFieldsAsMap() method to get the Ma of field Vs Value of shift record.
+     * Step 4:Loop through the set of days of week and 
+     * use day+_Start_Time__c and day+_End_Time__c to dynamically get the value of shift record fields
+     * Step 5: Create dayAndTime instance with Day,StartTime and EndTime and add it to the list
+     * Step 6: After end of days loop, Create a Map<String,List<dayAndTime>> as Shift Name Vs List of dayAndTime. 
+     * Step 5.1 Also Create Map of Day Vs List<dayAndTime>  and later use it sort based on chronogical order of days {Like Monday Tuesday ..}
+     * Step 7.use sortListByDays method to sort the list<dayAndTime>
+     * Step 8. Create masterData wrapper instance with workingPatternDayVsTimes,shiftVsDaysTimings  
+     * @param  contractDetails it is contract record.
+     */ 
     @AuraEnabled
     public static masterData getWorkingPatternOfContract(Contract contractDetails){
         String dayStartTimeFieldAPI,dayEndTimeFieldAPI;
@@ -42,7 +61,10 @@ public with sharing class workingPatternController {
         workingPatternDayVsTimes = sortListByDays(daysVsListOfShiftDetails);
         return new masterData(workingPatternDayVsTimes,shiftVsDaysTimings);
     }
-
+    /**
+     * @description It will return the shift records associated to Working Pattern
+     * @param  workingPatternId 
+     */
     public static List<Shift__c> getShifts(String workingPatternId){
         return [SELECT Id,Name, Monday_Start_Time__c, Monday_End_Time__c, Tuesday_Start_Time__c, Tuesday_End_Time__c,
         Wednesday_End_Time__c, Wednesday_Start_Time__c, Thursday_Start_Time__c, Thursday_End_Time__c, Friday_Start_Time__c, Friday_End_Time__c, 
@@ -53,6 +75,12 @@ public with sharing class workingPatternController {
     public static Contract getContractDetails(String recordId){
         return [SELECT Working_Pattern__c FROM Contract WHERE Id =:recordId LIMIT 1];
     }
+    /**
+     * @description this method is used to fetch the data from the platform cache if data is not available then putWorkingPatternMasterData will used to store the data
+     * @param  orgPartition   -  cache partition name
+     * @param  contractDetails -  contract record
+     * @return - masterData wrapper class instance
+     */ 
     public static masterData getWorkingPatternMasterDataFromCache(String orgPartition,Contract contractDetails){
         masterData workingPatternData = new masterData();
         Cache.orgPartition orgPart = Cache.Org.getPartition(orgPartition);
@@ -62,7 +90,13 @@ public with sharing class workingPatternController {
             }
         return putWorkingPatternMasterData(orgPartition,contractDetails);
     }
-    
+    /**
+     * @description It will be used to process the shift data by calling getWorkingPatternOfContract  
+     * and insert the data /master data into platfomr cache 
+     * @param  orgPartition   -  cache partition name
+     * @param  contractDetails -  contract record
+     * @return - masterData wrapper class instance
+     */ 
     public static masterData  putWorkingPatternMasterData(String orgPartition,Contract contractDetails){
         masterData  workingPatternData = new masterData();
         Cache.orgPartition orgPart = Cache.Org.getPartition(orgPartition);
@@ -71,6 +105,11 @@ public with sharing class workingPatternController {
         return workingPatternData;
     }
 
+    /**
+     * @description convert Map of Shift Vs List<dayAndTime into a List<dayAndTime>
+     * @param  temp  
+     * @return sorted List of dayAndTime by Day.
+     */ 
     public  static  List<dayAndTime>  sortListByDays(Map<String,List<dayAndTime>> temp) {
         List<dayAndTime> allRecordsByDays= new List<dayAndTime>();
         for(String day:temp.keySet()){
